@@ -301,6 +301,33 @@ class AbstractFCMDevice(Device):
             self.deactivate_devices_with_error_result(self.registration_id, e)
             return e
 
+    def send_topic_message(
+        self,
+        topic: str,
+        message: messaging.Message,
+        **more_send_message_kwargs,
+    ) -> Union[Optional[messaging.SendResponse], FirebaseError]:
+        """
+        Send topic message. Responds with message ID string.
+
+        :param topic: topic for message
+        :param message: firebase.messaging.Message.
+        :param more_send_message_kwargs: Parameters for firebase.messaging.send_all()
+        - dry_run: bool. Whether to actually send the notification to the device
+        - app: firebase_admin.App. Specify a specific app to use
+        If there are any new parameters, you can still specify them here.
+
+        :raises FirebaseError
+        :returns messaging.SendResponse or FirebaseError
+        """
+        message.topic = topic
+        try:
+            return messaging.SendResponse(
+                {"name": messaging.send(message, **more_send_message_kwargs)}, None
+            )
+        except FirebaseError as e:
+            return e
+
     def handle_topic_subscription(
         self,
         should_subscribe: bool,
